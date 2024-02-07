@@ -1,27 +1,57 @@
 import {AppRegistry, StyleSheet, Text, TextInput, View} from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
-
+import GetLocation from 'react-native-get-location';
+import {Dimensions} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 const Home = () => {
+  const [userLocation, setUserLocation] = useState({
+    latitude: 37.78825,
+    longitude: -122.4324,
+  });
+  const {width} = Dimensions.get('window');
+  const [widthOfMap, setWidthOfMap] = useState(width);
+  useEffect(() => {
+    GetLocation.getCurrentPosition({
+      enableHighAccuracy: false,
+      timeout: 60000,
+    })
+      .then(location => {
+        console.log(location);
+        setUserLocation({
+          longitude: location.longitude,
+          latitude: location.latitude,
+        });
+      })
+      .catch(error => {
+        const {code, message} = error;
+        console.warn(code, message);
+      });
+  }, []);
   return (
     <View style={styles.container}>
-      <View style={{flex: 0.7}}>
+      <View style={{flex: 1}}>
         <MapView
           provider={PROVIDER_GOOGLE}
           style={styles.map}
           initialRegion={{
-            latitude: 37.78825,
-            longitude: -122.4324,
+            latitude: userLocation ? userLocation.latitude : 37.78825,
+            longitude: userLocation ? userLocation.longitude : -122.4324,
             latitudeDelta: 0.015,
             longitudeDelta: 0.0121,
           }}
-          showUserLocation={true}>
+          mapType="standard"
+          showsUserLocation={true} // Show the current user location
+          showsMyLocationButton={true} // Show the "go to current location" button
+          zoomControlEnabled={true}
+          // onMapReady={{mapMargin: userLocation ? 0 : 1}}>
+        >
           <Marker
             coordinate={{
-              latitude: 37.78825,
-              longitude: -122.4324,
+              latitude: userLocation?.latitude,
+              longitude: userLocation?.longitude,
             }}
           />
         </MapView>
@@ -44,22 +74,14 @@ const Home = () => {
 export default Home;
 const styles = StyleSheet.create({
   container: {
-    // position: 'absolute',
-    // top: 0,
-    // left: 0,
-    // right: 0,
-    // bottom: 0,
-    // justifyContent: 'flex-end',
-    // alignItems: 'center',
-    flex: 1,
+    justifyContent: 'center',
+    position: 'absolute',
+    height: Dimensions.get('window').height,
+    width: Dimensions.get('window').width,
   },
   map: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
     flex: 1,
+    marginBottom: 0,
   },
   topMenuContainer: {
     height: 50,
@@ -80,7 +102,7 @@ const styles = StyleSheet.create({
   searchBar: {
     backgroundColor: '#fff',
     borderRadius: 20,
-    width: '80%',
+    // width: '80%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
